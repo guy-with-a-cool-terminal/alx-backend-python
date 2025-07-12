@@ -1,0 +1,25 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# dotenv files (DO NOT commit secrets)
+.env
+
+# CSV files (optional, if sensitive or not needed in repo)
+user_data.csv
+
+# Mac OS files
+.DS_Store
+
+# Logs and database dumps (optional)
+*.log
+*.sql
+*.sqlite3
