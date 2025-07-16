@@ -1,15 +1,10 @@
 # Ignore virtual environments
 myenv/
+env/
 venv/
 */myenv/
 */env/
 */venv/
-env
-*.env
-env
-/myenv
-myenv
-.git
 
 # Python cache
 __pycache__/
@@ -33,3 +28,6 @@ build/
 dist/
 *.egg-info/
 
+# Dotenv and secrets
+.env
+*.env
