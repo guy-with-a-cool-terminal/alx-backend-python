@@ -93,6 +93,7 @@ class TestHasLicense(unittest.TestCase):
     @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
         ({"license": {"key": "other_license"}}, "my_license", False),
+        ({}, "my_license", False),  # <- NEW: no license key
     ])
     def test_has_license(self, repo, license_key, expected):
         """Test has_license method with real inputs"""
@@ -100,4 +101,3 @@ class TestHasLicense(unittest.TestCase):
             GithubOrgClient.has_license(repo, license_key),
             expected
         )
-
