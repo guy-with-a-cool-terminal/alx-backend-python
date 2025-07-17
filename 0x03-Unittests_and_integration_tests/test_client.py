@@ -4,7 +4,7 @@ Unit tests for GithubOrgClient from client.py
 """
 
 import unittest
-from unittest.mock import patch,PropertyMock
+from unittest.mock import patch, PropertyMock
 from parameterized import parameterized
 from client import GithubOrgClient
 
@@ -28,24 +28,26 @@ class TestGithubOrgClient(unittest.TestCase):
         client = GithubOrgClient(org_name)
         result = client.org
 
-        mock_get_json.assert_called_once_with(f"https://api.github.com/orgs/{org_name}")
+        mock_get_json.assert_called_once_with(
+            f"https://api.github.com/orgs/{org_name}")
         self.assertEqual(result, expected_result)
-    
+
     def test_public_repos_url(self):
-        """ 
+        """
         test _public_repos_url returns a correct url
-        
+
         """
         test_url = "https://api.github.com/orgs/testorg/repos"
         mock_org_payload = {"repos_url": test_url}
-        
-        with patch.object(GithubOrgClient,"org",new_callable=PropertyMock) as mock_org:
+
+        with patch.object(
+                GithubOrgClient, "org", new_callable=PropertyMock) as mock_org:
             mock_org.return_value = mock_org_payload
             client = GithubOrgClient("testorg")
             result = client._public_repos_url
-            
-            self.assertEqual(result,test_url)
-            
+
+            self.assertEqual(result, test_url)
+
     @patch("client.get_json")
     def test_public_repos(self, mock_get_json):
         """
@@ -59,7 +61,9 @@ class TestGithubOrgClient(unittest.TestCase):
         ]
         mock_get_json.return_value = mock_repos_payload
 
-        with patch.object(GithubOrgClient, "_public_repos_url", new_callable=PropertyMock) as mock_url:
+        with patch.object(
+                GithubOrgClient,
+                "_public_repos_url", new_callable=PropertyMock) as mock_url:
             mock_url.return_value = "https://api.github.com/orgs/testorg/repos"
 
             client = GithubOrgClient("testorg")
@@ -68,6 +72,7 @@ class TestGithubOrgClient(unittest.TestCase):
             self.assertEqual(result, ["repo1", "repo2", "repo3"])
             mock_url.assert_called_once()
             mock_get_json.assert_called_once()
+
 
 class TestHasLicense(unittest.TestCase):
     """TestCase for GithubOrgClient.has_license"""
