@@ -1,22 +1,18 @@
-    @patch("client.get_json")
-    def test_public_repos(self, mock_get_json):
-        """
-        Test that public_repos returns correct names and
-        both get_json and _public_repos_url are used correctly.
-        """
-        mock_repos_payload = [
-            {"name": "repo1"},
-            {"name": "repo2"},
-            {"name": "repo3"}
-        ]
-        mock_get_json.return_value = mock_repos_payload
+from unittest.mock import patch
+from parameterized import parameterized
+import unittest
+from client import GithubOrgClient
 
-        with patch.object(GithubOrgClient, "_public_repos_url", new_callable=property) as mock_url:
-            mock_url.return_value = "https://api.github.com/orgs/testorg/repos"
+class TestHasLicense(unittest.TestCase):
+    """TestCase for GithubOrgClient.has_license"""
 
-            client = GithubOrgClient("testorg")
-            result = client.public_repos()
-
-            self.assertEqual(result, ["repo1", "repo2", "repo3"])
-            mock_url.assert_called_once()
-            mock_get_json.assert_called_once()
+    @parameterized.expand([
+        ({"license": {"key": "my_license"}}, "my_license", True),
+        ({"license": {"key": "other_license"}}, "my_license", False),
+    ])
+    @patch("client.access_nested_map")  # Correct path based on import
+    def test_has_license(self, repo, license_key, expected, mock_access):
+        """Test the has_license static method with patched access_nested_map."""
+        mock_access.return_value = repo["license"]["key"]
+        result = GithubOrgClient.has_license(repo, license_key)
+        self.assertEqual(result, expected)
