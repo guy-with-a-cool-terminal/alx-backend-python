@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unit && INtergration tests for GithubOrgClient from client.py
+Unit && Intergration tests for GithubOrgClient from client.py
 """
 
 import unittest
