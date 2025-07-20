@@ -22,6 +22,12 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username','first_name','last_name']
     
+    def save(self, *args, **kwargs):
+        # Ensure password is hashed
+        if self._state.adding and not self.password.startswith('pbkdf2_'):
+            self.password = make_password(self.password)
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"{self.email} ({self.role})"
     
