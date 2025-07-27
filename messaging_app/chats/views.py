@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Conversation, Message, CustomUser
 from .serializers import (
@@ -13,7 +14,7 @@ from .serializers import (
 
 class ConversationViewSet(viewsets.ModelViewSet):
     """ allows listing, retrieving, creating convos """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsParticipantOfConversation]
     queryset = Conversation.objects.all()
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['created_at']            
@@ -39,8 +40,13 @@ class MessageViewSet(viewsets.ModelViewSet):
     ViewSet for managing messages within conversations.
     Allows listing and sending messages.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsParticipantOfConversation]
     serializer_class = MessageSerializer
+    pagination_class = MessagePagination
+
+    # Filtering setup
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = MessageFilter
 
     def get_queryset(self):
         # Show only messages in conversations the user is part of
