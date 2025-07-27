@@ -3,23 +3,29 @@ from .models import Conversation, Message
 
 class IsParticipantOfConversation(permissions.BasePermission):
     """
-    Custom permission to allow only participants of a conversation
-    to access its messages.
+    Custom permission to:
+    - Allow access only to authenticated users
+    - Restrict all operations (GET, POST, PUT, PATCH, DELETE) to participants
+    of a given conversation.
     """
 
     def has_permission(self, request, view):
-        # Ensure user is authenticated globally (already set in settings)
+        # All requests require authentication
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        # obj could be Conversation or Message instance
+        """
+        Object-level permission:
+        Allow access only if the user is a participant of the related conversation.
+        """
 
-        # If object is a Conversation, check if user is a participant
+        # Covers GET, PUT, PATCH, DELETE on Conversations
         if isinstance(obj, Conversation):
             return request.user in obj.participants.all()
 
-        # If object is a Message, check if user is participant of the message's conversation
+        # Covers all operations on Messages (view, update, delete)
         if isinstance(obj, Message):
             return request.user in obj.conversation.participants.all()
 
+        # Deny access by default
         return False
