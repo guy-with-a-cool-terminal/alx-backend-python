@@ -10,6 +10,7 @@ def send_message(request):
     if request.method == 'POST':
         receiver_id = request.POST.get('receiver_id')
         content = request.POST.get('content')
+        sender=request.user
         Message.objects.create(sender=request.user, receiver_id=receiver_id, content=content)  # Ensure sender=request.user
         return redirect('inbox')  # Redirect to inbox or another page after sending
 
