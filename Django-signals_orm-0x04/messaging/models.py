@@ -1,15 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class UnreadMessagesManager(models.Manager):
+    def unread_for_user(self, user):
+        return self.filter(receiver=user, read=False)  # Filter unread messages for a specific user
+
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False)
-    edited_at = models.DateTimeField(null=True, blank=True)  # Field to track when the message was edited
-    edited_by = models.ForeignKey(User, null=True, blank=True, related_name='edited_messages', on_delete=models.SET_NULL)  # Field to track who edited the message
+    edited_at = models.DateTimeField(null=True, blank=True)
+    edited_by = models.ForeignKey(User, null=True, blank=True, related_name='edited_messages', on_delete=models.SET_NULL)
     parent_message = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
+    read = models.BooleanField(default=False)  # Field to indicate if the message has been read
+
+    objects = models.Manager()  # Default manager
+    unread = UnreadMessagesManager()  # Custom manager for unread messages
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

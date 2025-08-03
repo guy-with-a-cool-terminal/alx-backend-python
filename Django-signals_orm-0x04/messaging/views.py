@@ -41,3 +41,21 @@ def delete_user(request):
         user = request.user
         user.delete()
         return redirect('home')
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Message
+
+@login_required
+def send_message(request):
+    if request.method == 'POST':
+        receiver_id = request.POST.get('receiver_id')
+        content = request.POST.get('content')
+        Message.objects.create(sender=request.user, receiver_id=receiver_id, content=content)
+        return redirect('inbox')
+
+@login_required
+def inbox_view(request):
+    # Use the custom manager to get unread messages
+    unread_messages = Message.unread.unread_for_user(request.user).only('id', 'content', 'timestamp')  # Optimize with .only()
+    return render(request, 'messages/inbox.html', {'unread_messages': unread_messages})
+
