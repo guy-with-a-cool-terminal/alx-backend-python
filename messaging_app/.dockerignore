@@ -1,0 +1,25 @@
+# Version control files
+.git
+.gitignore
+
+# Python cache files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv
+.env
+myenv
+
+# Development files
+*.log
+db.sqlite3
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Unnecessary project files
+*.md
