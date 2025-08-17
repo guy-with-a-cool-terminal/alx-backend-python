@@ -1,31 +1,32 @@
 from rest_framework import permissions
-from .models import Conversation, Message
+
+# Re-export IsAuthenticated so it can be imported from this file too
+IsAuthenticated = permissions.IsAuthenticated
 
 class IsParticipantOfConversation(permissions.BasePermission):
     """
-    Custom permission to:
-    - Allow access only to authenticated users
-    - Restrict all operations (GET, POST, PUT, PATCH, DELETE) to participants
-    of a given conversation.
+    Only participants of the conversation can view, modify, or send messages.
     """
 
-    def has_permission(self, request, view):
-        # All requests require authentication
-        return request.user and request.user.is_authenticated
-
     def has_object_permission(self, request, view, obj):
-        """
-        Object-level permission:
-        Allow access only if the user is a participant of the related conversation.
-        """
+        user = request.user
 
-        # Covers GET, PUT, PATCH, DELETE on Conversations
-        if isinstance(obj, Conversation):
-            return request.user in obj.participants.all()
+        # Allow read-only methods if user is a participant
+        if request.method in permissions.SAFE_METHODS:
+            if hasattr(obj, 'participants'):
+                return user in obj.participants.all()
+            if hasattr(obj, 'conversation'):
+                return user in obj.conversation.participants.all()
+            return False
 
-        # Covers all operations on Messages (view, update, delete)
-        if isinstance(obj, Message):
-            return request.user in obj.conversation.participants.all()
+        # For PUT, PATCH, DELETE — enforce stricter check
+        if request.method in ["PUT", "PATCH", "DELETE"]:
+            if hasattr(obj, 'conversation'):
+                return user in obj.conversation.participants.all()
+            if hasattr(obj, 'participants'):
+                return user in obj.participants.all()
 
-        # Deny access by default
         return False
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated

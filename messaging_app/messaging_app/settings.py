@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-from rest_framework.pagination import PageNumberPagination
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-aoj*2jj#2%74(p33%dvoe$5()pvi5j%icv_rykn$-g9xohcw&d'
+SECRET_KEY = 'django-insecure-l_77kik+@=63^j3*#fp(2l@o*n@&9&$u++m+a5*5a0vs46k%ux'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -39,9 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_simplejwt',
     'chats',
-    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -59,7 +56,7 @@ ROOT_URLCONF = 'messaging_app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -79,11 +76,14 @@ WSGI_APPLICATION = 'messaging_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'messagingdb',
+        'USER': 'messaginguser',
+        'PASSWORD': 'securepass',
+        'HOST': 'db',          # Docker Compose service name
+        'PORT': '3306',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -103,7 +103,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'chats.CustomUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -116,25 +115,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-# messaging_app/settings.py
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'messaging_app.chats.pagination.MessagePagination',
-    'PAGE_SIZE': 20,
-}
-
-
+AUTH_USER_MODEL = 'chats.User'
 
 
 # Static files (CSS, JavaScript, Images)
@@ -146,3 +127,26 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST Framework defaults (optional)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',    
+        'rest_framework.authentication.SessionAuthentication',         # enables login via /admin or /login
+        'rest_framework.authentication.TokenAuthentication',           # for token auth (optional)
+        'chats.auth.CustomJWTAuthentication',
+         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+LOGIN_REDIRECT_URL = '/api/'

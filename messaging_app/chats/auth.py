@@ -1,30 +1,22 @@
-from rest_framework import generics
-from rest_framework.permissions import AllowAny
-from django.contrib.auth.models import User
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.serializers import ModelSerializer, CharField, ValidationError
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 
-# Serializer for user registration
-class RegisterSerializer(ModelSerializer):
-    password = CharField(write_only=True)
-    password2 = CharField(write_only=True)
+class CustomJWTAuthentication(JWTAuthentication):
+    """
+    Extends the default JWT authentication to add extra logic if needed.
+    """
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'password2']
+    def authenticate(self, request):
+        # Let the parent do the heavy lifting
+        user_auth_tuple = super().authenticate(request)
 
-    def validate(self, data):
-        if data['password'] != data['password2']:
-            raise ValidationError("Passwords do not match.")
-        return data
+        if user_auth_tuple is None:
+            return None  # No valid token
 
-    def create(self, validated_data):
-        validated_data.pop('password2')
-        user = User.objects.create_user(**validated_data)
-        return user
+        user, token = user_auth_tuple
 
-# View to register new users
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]  # Allow unauthenticated access
+        # Example: deny inactive users
+        if not user.is_active:
+            raise AuthenticationFailed("User account is disabled.")
+
+        return (user, token)
