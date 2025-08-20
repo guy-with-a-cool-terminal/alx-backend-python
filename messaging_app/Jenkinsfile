@@ -34,8 +34,7 @@ pipeline {
             steps {
                 sh '''
                     cd messaging_app
-                    . venv/bin/activate
-                    pytest --verbose --junitxml=test-results.xml
+                    . venv/bin/activate && pytest --verbose --junitxml=test-results.xml
                 '''
             }
             post {
