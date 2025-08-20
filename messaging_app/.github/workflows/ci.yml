@@ -24,7 +24,7 @@ jobs:
 
     env:
       DATABASE_URL: mysql://testuser:testpassword@127.0.0.1:3306/test_messaging_app
-      DJANGO_SETTINGS_MODULE: messaging_app.settings.test
+      DJANGO_SETTINGS_MODULE: messaging_app.settings
 
     steps:
     - name: Checkout code
