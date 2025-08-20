@@ -6,7 +6,9 @@ pipeline {
             args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
-    credentialsId", "git branch
+    // credentialsId", "git branch
+    // messaging_app/requirements.txt", "pip3 install"
+
     environment {
         DOCKER_IMAGE = "${env.BUILD_NUMBER}"
         DOCKERHUB_REPO = "sudoerss/messaging-app"
