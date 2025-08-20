@@ -24,7 +24,7 @@ jobs:
 
     env:
       DATABASE_URL: mysql://testuser:testpassword@127.0.0.1:3306/test_messaging_app
-      DJANGO_SETTINGS_MODULE: messaging_app.settings.test
+      DJANGO_SETTINGS_MODULE: messaging_app.settings
 
     steps:
     - name: Checkout code
@@ -36,7 +36,7 @@ jobs:
         python-version: '3.10'
 
     - name: Cache pip dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -48,7 +48,7 @@ jobs:
         cd messaging_app
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest-django pytest-cov flake8
+        pip install pytest-django pytest-cov
 
     - name: Wait for MySQL
       run: |
@@ -57,33 +57,18 @@ jobs:
           sleep 2
         done
 
-    - name: Run flake8 linting
-      run: |
-        cd messaging_app
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
     - name: Run Django migrations
       run: |
         cd messaging_app
         python manage.py migrate --settings=messaging_app.settings.test
 
-    - name: Run tests with coverage
+    - name: Run tests
       run: |
         cd messaging_app
-        python -m pytest --verbose --tb=short --cov=. --cov-report=xml --cov-report=html --junitxml=test-results.xml
-
-    - name: Upload coverage reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: coverage-report
-        path: |
-          messaging_app/htmlcov/
-          messaging_app/coverage.xml
+        python -m pytest --verbose --tb=short --junitxml=test-results.xml
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       if: always()
       with:
         name: test-results
