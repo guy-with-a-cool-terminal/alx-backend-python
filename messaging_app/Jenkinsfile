@@ -54,20 +54,18 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 script {
+                    sh '''
+                    export DOCKER_CONFIG=$(mktemp -d)
+                    
                     echo 'Logging in to DockerHub...'
-                    sh '''
                     echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                    '''
+                    
                     echo 'Pushing Docker image...'
-                    sh '''
                     docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE}
                     docker push ${DOCKERHUB_REPO}:latest
+                    
+                    rm -rf $DOCKER_CONFIG
                     '''
-                }
-            }
-            post {
-                always {
-                    sh 'docker logout'
                 }
             }
         }
