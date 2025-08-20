@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = "${env.BUILD_NUMBER}"
+        DOCKERHUB_REPO = "sudoerss/messaging-app"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Pulling source code...'
+                checkout scm
+            }
+        }
+        
+        stage('Setup Python Environment') {
+            steps {
+                sh '''
+                    cd messaging_app
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                sh '''
+                    cd messaging_app
+                    . venv/bin/activate
+                    pytest --verbose --junitxml=test-results.xml
+                '''
+            }
+            post {
+                always {
+                    publishTestResults testResultsPattern: 'messaging_app/test-results.xml'
+                }
+            }
+        }
+    }
+}
