@@ -2,9 +2,9 @@ name: Django CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
 
 jobs:
   test:
@@ -36,7 +36,7 @@ jobs:
         python-version: '3.10'
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -48,7 +48,7 @@ jobs:
         cd messaging_app
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest-django pytest-cov
+        pip install pytest-django pytest-cov flake8
 
     - name: Wait for MySQL
       run: |
@@ -57,18 +57,33 @@ jobs:
           sleep 2
         done
 
+    - name: Run flake8 linting
+      run: |
+        cd messaging_app
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     - name: Run Django migrations
       run: |
         cd messaging_app
-        python manage.py migrate --settings=messaging_app.settings.test
+        python manage.py migrate --settings=messaging_app.settings
 
-    - name: Run tests
+    - name: Run tests with coverage
       run: |
         cd messaging_app
-        python -m pytest --verbose --tb=short --junitxml=test-results.xml
+        python -m pytest --verbose --tb=short --cov=. --cov-report=xml --cov-report=html --junitxml=test-results.xml
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: |
+          messaging_app/htmlcov/
+          messaging_app/coverage.xml
 
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
