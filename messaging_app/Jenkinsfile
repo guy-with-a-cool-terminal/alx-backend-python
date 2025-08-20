@@ -5,12 +5,11 @@ pipeline {
             args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
-    
     environment {
         DOCKER_IMAGE = "${env.BUILD_NUMBER}"
         DOCKERHUB_REPO = "sudoerss/messaging-app"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-token')
     }
-    
     stages {
         stage('Checkout') {
             steps {
@@ -18,23 +17,21 @@ pipeline {
                 checkout scm
             }
         }
-        
         stage('Setup Python Environment') {
             steps {
                 sh '''
-                    cd messaging_app
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install -r requirements.txt
+                cd messaging_app
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install -r requirements.txt
                 '''
             }
         }
-        
         stage('Run Tests') {
             steps {
                 sh '''
-                    cd messaging_app
-                    . venv/bin/activate && pytest --verbose --junitxml=test-results.xml
+                cd messaging_app
+                . venv/bin/activate && pytest --verbose --junitxml=test-results.xml
                 '''
             }
             post {
@@ -42,6 +39,45 @@ pipeline {
                     junit 'messaging_app/test-results.xml'
                 }
             }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo 'Building Docker image...'
+                    sh '''
+                    cd messaging_app
+                    docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE} -t ${DOCKERHUB_REPO}:latest .
+                    '''
+                }
+            }
+        }
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    echo 'Logging in to DockerHub...'
+                    sh '''
+                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                    '''
+                    echo 'Pushing Docker image...'
+                    sh '''
+                    docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE}
+                    docker push ${DOCKERHUB_REPO}:latest
+                    '''
+                }
+            }
+            post {
+                always {
+                    sh 'docker logout'
+                }
+            }
+        }
+    }
+    post {
+        cleanup {
+            sh '''
+            docker rmi ${DOCKERHUB_REPO}:${DOCKER_IMAGE} || true
+            docker rmi ${DOCKERHUB_REPO}:latest || true
+            '''
         }
     }
 }
